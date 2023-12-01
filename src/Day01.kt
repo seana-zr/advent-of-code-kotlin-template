@@ -1,5 +1,6 @@
 fun main() {
     fun getCalibrationValue(s: String): Int {
+        // we know there MUST be a first and last digit in the input
         val first = s.first { it.isDigit() }.digitToInt()
         val last = s.last { it.isDigit() }.digitToInt()
         return first.times(10).plus(last)
@@ -22,6 +23,7 @@ fun main() {
     )
 
     fun getRealCalibrationValue(s: String): Int {
+        // first we consider the digits like last time
         val initialFirst = s.find { it.isDigit() }
         val initialLast = s.findLast { it.isDigit() }
 
@@ -30,6 +32,7 @@ fun main() {
         var last = initialLast?.digitToInt() ?: 0
         var lastIndex = s.indexOfLast { it == initialLast }
 
+        // now we look for each word, and compare indices if they're found
         for ((word, digit) in wordsDigits) {
             val i = s.indexOf(word)
             val j = s.lastIndexOf(word)
