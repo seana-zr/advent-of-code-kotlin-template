@@ -1,7 +1,7 @@
 fun main() {
     fun getCalibrationValue(s: String): Int {
-        val first = s.find { it.isDigit() }!!.digitToInt()
-        val last = s.findLast { it.isDigit() }!!.digitToInt()
+        val first = s.first { it.isDigit() }.digitToInt()
+        val last = s.last { it.isDigit() }.digitToInt()
         return first.times(10).plus(last)
     }
 
