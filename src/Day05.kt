@@ -2,6 +2,7 @@ import kotlin.math.min
 
 fun main() {
 
+    // to save memory, we represent ranges as data structures instead of raw keys and values
     data class RangeMap(
         val sourceStart: Long,
         val sourceEnd: Long,
