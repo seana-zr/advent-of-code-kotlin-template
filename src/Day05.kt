@@ -10,6 +10,8 @@ fun main() {
     ) {
         fun appliesTo(n: Long): Boolean = n in sourceStart..sourceEnd
 
+        fun appliesBackwardsTo(n: Long): Boolean = n in destStart..destEnd
+
         fun offset(): Long = destStart - sourceStart
     }
 
@@ -73,18 +75,65 @@ fun main() {
         return result
     }
 
-    fun part2(input: List<String>): Int {
-        var result = 0
+    data class SeedRange(
+        val startSeed: Long,
+        val length: Long
+    ) {
+        val endSeed = startSeed + length - 1
+    }
 
-        println("RESULT: $result")
-        return result
+    fun isValidSeed(n: Long, seedRanges: List<SeedRange>): Boolean = seedRanges.any { seedRange ->
+        n in seedRange.startSeed..seedRange.endSeed
+    }
+
+    fun part2(input: List<String>): Long {
+        val seedRanges = input.first()
+            .drop(7)
+            .split(" ")
+            .map { it.toLong() }
+            .chunked(2)
+            .map { SeedRange(it[0], it[1]) }
+
+        val iterator = input.iterator()
+
+        println(iterator.next())
+        iterator.next()
+
+        val seedToSoil = parseMap(iterator)
+        val soilToFertilizer = parseMap(iterator)
+        val fertilizerToWater = parseMap(iterator)
+        val waterToLight = parseMap(iterator)
+        val lightToTemperature = parseMap(iterator)
+        val temperatureToHumidity = parseMap(iterator)
+        val humidityToLocation = parseMap(iterator)
+
+        fun convertBackwards(n: Long, rangeMaps: List<RangeMap>): Long =
+            n - (rangeMaps
+                .find { it.appliesBackwardsTo(n) }
+                ?.offset() ?: 0)
+
+        var location = 0.toLong()
+        while (true) {
+            val humidity = convertBackwards(location, humidityToLocation)
+            val temperature = convertBackwards(humidity, temperatureToHumidity)
+            val light = convertBackwards(temperature, lightToTemperature)
+            val water = convertBackwards(light, waterToLight)
+            val fertilizer = convertBackwards(water, fertilizerToWater)
+            val soil = convertBackwards(fertilizer, soilToFertilizer)
+            val seed = convertBackwards(soil, seedToSoil)
+            if (isValidSeed(seed, seedRanges)) {
+                println("RESULT: $location")
+                return location
+            }
+            location++
+        }
     }
 
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("Day05_test")
-    check(part1(testInput) == 35.toLong())
+    check(part2(testInput) == 46.toLong())
 
     val input = readInput("Day05")
-    part1(input).println()
-//    part2(input).println()
+//    part1(input).println()
+    part2(input).println()
 }
