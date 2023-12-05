@@ -55,15 +55,67 @@ fun main() {
         return result
     }
 
-    fun part2(input: List<String>): Int {
-        return input.size
+    fun extractGearCandidateIndices(line: String): List<Int> {
+        val pattern = Pattern.compile("\\*")
+        val matcher = pattern.matcher(line)
+
+        val matches = mutableListOf<Int>()
+
+        while (matcher.find()) {
+            val start = matcher.start()
+            matches.add(start)
+        }
+
+        return matches
+    }
+
+    // 0 if not gear
+    fun gearRatio(row: Int, col: Int, input: List<String>): Int {
+        val startRowBound = max(0, row - 1)
+        val endRowBound = min(input.size - 1, row + 1)
+        val startColBound = max(0, col - 1)
+        val endColBound = min(input.first().length - 1, col + 1)
+
+        print("rows [$startRowBound,$endRowBound]\tcols [$startColBound,$endColBound]\t")
+
+        val numbers = mutableListOf<Int>()
+        println()
+        for (r in startRowBound .. endRowBound) {
+            for ((n, start, endExclusive) in extractNumbersWithIndices(input[r])) {
+                val end = endExclusive - 1
+                println("$n $start $end")
+                if (start in startColBound..endColBound
+                    || end in startColBound..endColBound
+                ) {
+                    numbers.add(n)
+                }
+            }
+        }
+        print("$numbers \t")
+        if (numbers.size != 2) {
+            return 0
+        }
+        return numbers.first() * numbers.last()
+    }
+
+    fun part2(input: List<String>): Long {
+        var result: Long = 0
+        input.forEachIndexed { row, s ->
+            for (col in extractGearCandidateIndices(s)) {
+                print("candidate ($row, $col) \t")
+                result += gearRatio(row, col, input)
+                println(result)
+            }
+        }
+        println("RESULT: $result")
+        return result
     }
 
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("Day03_test")
-    check(part1(testInput) == 4361)
+    check(part2(testInput) == 467835.toLong())
 
     val input = readInput("Day03")
-    part1(input).println()
-//    part2(input).println()
+//    part1(input).println()
+    part2(input).println()
 }
