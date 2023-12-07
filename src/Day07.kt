@@ -1,3 +1,5 @@
+const val JOKER = true
+
 enum class HandType {
     HIGH, ONE_PAIR, TWO_PAIR, THREE, FULL, FOUR, FIVE;
 }
@@ -33,8 +35,24 @@ fun String.getHandType(): HandType {
     }
 }
 
+fun String.jokerHand(): String {
+    // edge case: most frequent card is J
+    val frequencies = frequencies().filter { it.key != 'J' }
+    // edge case: JJJJJ
+    if (frequencies.isEmpty()) return "11111"
+
+    val highestFrequency = frequencies.values.max()
+    val mostFrequentCard = first { frequencies[it] == highestFrequency }
+    return replace('J', mostFrequentCard)
+}
+
+// turn the jokers into whatever card has the highest frequency
+fun String.getHandTypeWithJoker(): HandType {
+    return jokerHand().getHandType()
+}
+
 enum class Card(val n: Int) {
-    A(14), K(13), Q(12), J(11), T(10)
+    A(14), K(13), Q(12), J(if (JOKER) 1 else 11), T(10)
 }
 
 fun Char.cardValue(): Int {
@@ -43,20 +61,18 @@ fun Char.cardValue(): Int {
     else this.digitToInt()
 }
 
-// TODO: THIS IS TOTALLY WRONG, MAKE A COMPARATOR INSTEAD
-fun String.getHandValue(): Long {
-    var value: Long = 0
-    forEach {
-        value *= 15
-        value += it.cardValue()
-    }
-    return value
-}
-
 data class Player(
     val hand: String,
     val bid: Int
-)
+) : Comparable<Player> {
+    override fun compareTo(other: Player): Int {
+        hand.zip(other.hand).forEach { (our, other) ->
+            val difference = our.cardValue() - other.cardValue()
+            if (difference != 0) return difference
+        }
+        return 0
+    }
+}
 
 fun main() {
 
@@ -69,12 +85,12 @@ fun main() {
                 Player(hand = hand, bid = bid.toInt())
             }
             .sortedWith(
-                compareBy({ it.hand.getHandType() }, { it.hand.getHandValue() })
+                compareBy({ it.hand.getHandType() }, { it })
             )
         players.forEachIndexed { index, player ->
             val rank = index + 1
             val score = player.bid * rank
-            println("${player.hand} ${player.bid} rank $rank score $score ${player.hand.getHandType()} ${player.hand.getHandValue()}")
+            println("${player.hand} ${player.bid} rank $rank score $score ${player.hand.getHandType()}")
             result += score
         }
         println("RESULT: $result")
@@ -83,16 +99,30 @@ fun main() {
 
     fun part2(input: List<String>): Long {
         var result = 0.toLong()
-
+        val players = input
+            .map {
+                val (hand, bid) = it.split(" ")
+                Player(hand = hand, bid = bid.toInt())
+            }
+            .sortedWith(
+                compareBy({ it.hand.getHandTypeWithJoker() }, { it })
+            )
+        players.forEachIndexed { index, player ->
+            val rank = index + 1
+            val score = player.bid * rank
+            println("${player.hand} ${player.bid} rank $rank hand ${player.hand.jokerHand()} ${player.hand.getHandTypeWithJoker()}")
+            result += score
+        }
         println("RESULT: $result")
         return result
     }
 
     // test if implementation meets criteria from the description, like:
-    val testInput = readInput("Day07_test")
-    check(part1(testInput) == 6440)
+    val testInput = readInput("Day07_test_2")
+//    check(part1(testInput) == 6440)
+    check(part2(testInput) == 6839.toLong())
 
     val input = readInput("Day07")
-    part1(input).println()
-//    part2(input).println()
+//    part1(input).println()
+    part2(input).println()
 }
